@@ -3,7 +3,7 @@
 set -e
 
 LONGHORN_ENGINE_IMAGE="rancher/longhorn-engine:046b5a5"
-LONGHORN_MANAGER_IMAGE="rancher/longhorn-manager:51d1ff2"
+LONGHORN_MANAGER_IMAGE="mazzolino/longhorn-manager:2f41e9a-dirty"
 LONGHORN_DRIVER_IMAGE="rancher/storage-longhorn:11a4f5a"
 LONGHORN_UI_IMAGE="rancher/longhorn-ui:b09b215"
 
@@ -18,6 +18,10 @@ do
         case $key in
                 -e|--etcd-ip)
                         etcd_ip="$2"
+                        shift # past argument
+                        ;;
+                -f|--frontend)
+                        frontend="$2"
                         shift # past argument
                         ;;
                 -n|--network)
@@ -45,6 +49,11 @@ fi
 
 # will error out if fail since we have set -e
 validate_ip ${etcd_ip}
+
+frontend_options=
+if [ "$frontend" != "" ]; then
+        frontend_option="--frontend ${frontend}"
+fi
 
 network_option=
 if [ "$network" != "" ]; then
@@ -94,6 +103,7 @@ docker run -d \
         ${LONGHORN_MANAGER_IMAGE} \
         launch-manager -d \
         --orchestrator docker \
+        ${frontend_option} \
         --engine-image ${LONGHORN_ENGINE_IMAGE} \
         --etcd-servers http://${etcd_ip}:2379
 echo ${LONGHORN_MANAGER_NAME} is ready
